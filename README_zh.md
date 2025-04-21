@@ -76,6 +76,161 @@ v2 的构想是基于我多年在云原生领域，特别是在 K8s 和 ServiceM
 
 完整文档已经迁移至 [https://gofrp.org](https://gofrp.org)。
 
+## 通过 CR 进行配置
+
+新增了通过 Kubernetes Custom Resource (CR) 进行 frp 服务端配置和状态管理的能力。这种方式特别适合在 Kubernetes 环境中部署和管理 frp。
+
+### 服务端配置
+
+1. 首先需要安装 frp 的 CRD：
+
+```yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: frpservers.core.frp.io
+spec:
+  group: core.frp.io
+  names:
+    kind: FrpServer
+    plural: frpservers
+    singular: frpserver
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                bindPort:
+                  type: integer
+                bindUdpPort:
+                  type: integer
+                kcpBindPort:
+                  type: integer
+                quicBindPort:
+                  type: integer
+                vhostHttpPort:
+                  type: integer
+                vhostHttpsPort:
+                  type: integer
+                dashboardPort:
+                  type: integer
+                dashboardUser:
+                  type: string
+                dashboardPwd:
+                  type: string
+                logLevel:
+                  type: string
+                logMaxDays:
+                  type: integer
+                disableLogColor:
+                  type: boolean
+                token:
+                  type: string
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+```
+
+2. 创建 FrpServer 实例：
+
+```yaml
+apiVersion: core.frp.io/v1
+kind: FrpServer
+metadata:
+  name: frp-server
+  namespace: frp
+spec:
+  bindPort: 7000
+  vhostHttpPort: 80
+  vhostHttpsPort: 443
+  dashboardPort: 7500
+  dashboardUser: admin
+  dashboardPwd: admin
+  token: your-token
+```
+
+### 连接状态展示
+
+frp 提供了 FrpConnection CRD 来展示连接状态：
+
+```yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: frpconnections.core.frp.io
+spec:
+  group: core.frp.io
+  names:
+    kind: FrpConnection
+    plural: frpconnections
+    singular: frpconnection
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                serverName:
+                  type: string
+                clientName:
+                  type: string
+                proxyType:
+                  type: string
+                localAddr:
+                  type: string
+                remoteAddr:
+                  type: string
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                startTime:
+                  type: string
+                lastHeartbeatTime:
+                  type: string
+                bytesIn:
+                  type: integer
+                bytesOut:
+                  type: integer
+```
+
+通过 kubectl 可以查看连接状态：
+
+```bash
+kubectl get frpconnections -n frp
+```
+
 ## 为 frp 做贡献
 
 frp 是一个免费且开源的项目，我们欢迎任何人为其开发和进步贡献力量。
