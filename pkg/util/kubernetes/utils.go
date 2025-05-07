@@ -11,7 +11,7 @@ type ServiceInfo struct {
 	Name      string
 	Namespace string
 	Cluster   string
-	Port      string
+	Port      int64
 	Type      string // "pod" or "svc"
 	IP        string
 	Metadata  map[string]string
