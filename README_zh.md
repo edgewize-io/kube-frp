@@ -104,7 +104,7 @@ spec:
 
 ### 连接状态展示
 
-FrpServer 实例中提供了 status.ActiveConnections 来展示连接状态：
+FrpServer 实例中提供了 status.activeConnections 来展示连接状态：
 
 通过 kubectl 可以查看连接状态：
 
